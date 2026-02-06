@@ -22,6 +22,7 @@ export default function ChallengesPage() {
   const fetchChallenges = async () => {
     try {
       setLoading(true);
+      console.log('API Base URL:', process.env.REACT_APP_API_URL);
       const response = await api.get('/challenges/');
       setChallenges(response.data);
     } catch (err) {
