@@ -66,8 +66,8 @@ async def health_check():
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(challenges.router, prefix="/api/challenges", tags=["Challenges"])
 app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
-# app.include_router(challenges.router, prefix="/api/challenges", tags=["Challenges"])
-# app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
+app.include_router(challenges.router, prefix="/api/challenges", tags=["Challenges"])
+app.include_router(submissions.router, prefix="/api/submissions", tags=["Submissions"])
 # app.include_router(profile.router, prefix="/api/profile", tags=["Profile"])
 
 
