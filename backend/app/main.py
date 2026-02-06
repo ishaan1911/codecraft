@@ -32,6 +32,7 @@ async def startup_event():
     print("🚀 CodeCraft API is starting up...")
     print(f"📝 Environment: {settings.ENVIRONMENT}")
     print(f"🔧 Debug mode: {settings.DEBUG}")
+    print(f"🌐 CORS Allowed Origins: {settings.allowed_origins_list}")
 
 
 @app.on_event("shutdown")
