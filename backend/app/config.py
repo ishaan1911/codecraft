@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 
 
 class Settings(BaseSettings):
@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     
     # Redis
-    REDIS_URL: str
+    REDIS_URL: Optional[str] = None 
     
     # JWT/Auth
     SECRET_KEY: str
