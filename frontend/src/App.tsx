@@ -1,9 +1,4 @@
 import React from 'react';
-import ChallengesPage from './pages/ChallengesPage';
-import ChallengeDetailPage from 'pages/ChallengeDetailPage';
-import SubmitChallengePage from 'pages/SubmitChallengePage';
-import SubmissionResultPage from 'pages/SubmissionResultPage';
-import SubmissionsPage from 'pages/SubmissionsPage';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { authService } from './services/auth';
 
@@ -12,6 +7,8 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import ChallengesPage from './pages/ChallengesPage';
+import ChallengePage from './pages/ChallengePage';
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -47,23 +44,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
-            <Route
-            path="/challenges/:id"
-            element={
-              <ProtectedRoute>
-                <ChallengeDetailPage />
-              </ProtectedRoute>
-            }
-          />
-            <Route
-            path="/challenges/:id/submit"
-            element={
-              <ProtectedRoute>
-                <SubmitChallengePage />
-              </ProtectedRoute>
-  }
-/>
+          
           <Route
             path="/challenges"
             element={
@@ -72,25 +53,16 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          
           <Route
-            path="/submissions"
+            path="/challenges/:id"
             element={
               <ProtectedRoute>
-                <SubmissionsPage />
+                <ChallengePage />
               </ProtectedRoute>
             }
           />
-
-          <Route
-            path="/submissions/:id"
-            element={
-              <ProtectedRoute>
-                <SubmissionResultPage />
-              </ProtectedRoute>
-            }
-          />
-
+          
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
