@@ -1,19 +1,29 @@
-from fastapi import FastAPI
-from app.api import auth, challenges, submissions
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 
 # Import routers
-from app.api import auth
-# from app.api import challenges, submissions, profile
+from app.api import auth, challenges, submissions
 
 app = FastAPI(
     title="CodeCraft API",
     description="Engineering Skills Verification Platform",
     version="1.0.0",
-    debug=settings.DEBUG
+    debug=settings.DEBUG,
+    # Trust proxy headers for correct scheme detection
+    root_path_in_servers=False
 )
+
+# Middleware to handle proxy headers from Railway
+@app.middleware("http")
+async def proxy_headers_middleware(request: Request, call_next):
+    """Handle X-Forwarded-Proto header from Railway's reverse proxy"""
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    if forwarded_proto:
+        request.scope["scheme"] = forwarded_proto
+    response = await call_next(request)
+    return response
 
 # CORS middleware
 app.add_middleware(
