@@ -1,187 +1,157 @@
-# CodeCraft - AI Skills Verification Platform
+# CodeCraft — AI Skills Verification Platform
 
-A platform for developers to prove engineering skills that AI coding assistants can't replicate.
+> A full-stack platform for browsing and completing AI-generated coding challenges.
 
-## Features
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-codecraft--frontend--psi.vercel.app-blue?style=flat-square)](https://codecraft-frontend-psi.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-ishaan1911%2Fcodecraft-181717?style=flat-square&logo=github)](https://github.com/ishaan1911/codecraft)
+![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat-square&logo=railway&logoColor=white)
 
-- **Code Comprehension Challenges**: Prove you understand complex code
-- **Debugging Arena**: Find and fix bugs AI tools miss
-- **AI Code Review**: Audit AI-generated code for vulnerabilities
-- **Verified Portfolio**: Public profile showcasing your skills
-- **Leaderboard**: Compete with other developers
+---
+
+## What It Does
+
+CodeCraft is a skills assessment platform where users can browse coding challenges by category and difficulty, submit solutions, and receive real-time feedback. The frontend is deployed on Vercel; the backend runs on Railway — a cross-origin deployment that required solving a non-trivial HTTPS mixed-content issue in production.
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────┐
+│    React + TypeScript (Vercel)       │
+│  Challenge Browse · Submit · Results │
+└──────────────────┬───────────────────┘
+                   │ HTTPS (cross-origin)
+┌──────────────────▼───────────────────┐
+│       FastAPI Backend (Railway)      │
+│  Uvicorn + proxy-headers middleware  │
+│  Challenges · Submissions · Results  │
+└──────────────────────────────────────┘
+```
+
+---
+
+## Key Features
+
+- **Challenge browsing** — filterable by category (algorithms, data structures, system design) and difficulty level
+- **Code submission flow** — users write and submit solutions directly in the browser; results return in real time
+- **React Router navigation** — multi-page SPA with clean URL routing between challenge list, detail, and submission views
+- **Cross-origin production deployment** — frontend on Vercel, backend on Railway; CORS and HTTPS handled correctly across both
+- **Proxy header middleware** — FastAPI configured with Uvicorn's `--proxy-headers` flag and custom middleware to handle Railway's reverse proxy correctly, resolving an HTTPS mixed-content issue that blocked all API calls in production
+
+---
 
 ## Tech Stack
 
-### Backend
-- FastAPI (Python)
-- PostgreSQL (Supabase)
-- Redis (Upstash)
-- Anthropic Claude API
+| Layer | Technology |
+|---|---|
+| Frontend | React, TypeScript, React Router, Vercel |
+| Backend | FastAPI, Python, Uvicorn |
+| Deployment | Vercel (frontend) · Railway (backend) |
+| DevOps | Docker, Git |
 
-### Frontend
-- React + TypeScript
-- Vite
-- Tailwind CSS
-- Zustand (state management)
-- React Router
+---
 
-### Deployment
-- Backend: Railway
-- Frontend: Vercel
-- Database: Supabase (PostgreSQL)
-- Cache: Upstash (Redis)
+## The Deployment Problem Worth Noting
 
-## Getting Started
+When deploying a React frontend on Vercel against a FastAPI backend on Railway, all API requests failed in production with a mixed-content error — the browser blocked HTTP requests from an HTTPS origin.
+
+**Root cause:** Railway's reverse proxy was stripping the `X-Forwarded-Proto` header, so FastAPI was generating internal redirect URLs with `http://` even though the public-facing URL was `https://`. This caused the browser to block requests as insecure.
+
+**Fix:**
+```python
+# main.py
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+```
+
+```bash
+# Railway start command
+uvicorn main:app --host 0.0.0.0 --port $PORT --proxy-headers
+```
+
+This correctly propagated the HTTPS scheme through Railway's proxy layer and resolved all cross-origin request failures.
+
+---
+
+## Local Development
 
 ### Prerequisites
-- Python 3.11+
 - Node.js 18+
-- PostgreSQL
-- Redis
+- Python 3.10+
 
-### Backend Setup
+### Frontend
 
-1. Navigate to backend directory:
 ```bash
-cd backend
-```
+git clone https://github.com/ishaan1911/codecraft
+cd codecraft/frontend
 
-2. Create virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Create `.env` file from `.env.example`:
-```bash
-cp .env.example .env
-```
-
-5. Update environment variables in `.env`
-
-6. Run database migrations:
-```bash
-alembic upgrade head
-```
-
-7. Start the server:
-```bash
-python -m app.main
-```
-
-Backend will be available at `http://localhost:8000`
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
 npm install
-```
-
-3. Create `.env` file from `.env.example`:
-```bash
 cp .env.example .env
+# Set REACT_APP_API_URL=http://localhost:8000
+
+npm start
+# Open http://localhost:3000
 ```
 
-4. Start development server:
+### Backend
+
 ```bash
-npm run dev
+cd codecraft/backend
+
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+uvicorn main:app --reload --port 8000
 ```
 
-Frontend will be available at `http://localhost:3000`
+---
 
-## Free Tier Services Setup
+## Environment Variables
 
-### 1. Supabase (PostgreSQL)
-1. Go to [supabase.com](https://supabase.com) and create account
-2. Create new project
-3. Copy the connection string (Settings > Database)
-4. Update `DATABASE_URL` in backend `.env`
+```env
+# Frontend
+REACT_APP_API_URL=https://your-railway-backend-url
 
-### 2. Upstash (Redis)
-1. Go to [upstash.com](https://upstash.com) and create account
-2. Create new Redis database
-3. Copy the connection string
-4. Update `REDIS_URL` in backend `.env`
+# Backend (Railway sets PORT automatically)
+PORT=8000
+```
 
-### 3. Anthropic API
-1. Go to [console.anthropic.com](https://console.anthropic.com)
-2. Create API key
-3. Update `ANTHROPIC_API_KEY` in backend `.env`
-
-### 4. Railway (Backend Hosting)
-1. Go to [railway.app](https://railway.app) and create account
-2. Create new project
-3. Connect your GitHub repository
-4. Add environment variables from `.env.example`
-5. Deploy
-
-### 5. Vercel (Frontend Hosting)
-1. Go to [vercel.com](https://vercel.com) and create account
-2. Import your GitHub repository
-3. Set root directory to `frontend`
-4. Add `VITE_API_URL` environment variable
-5. Deploy
+---
 
 ## Project Structure
 
 ```
 codecraft/
-├── backend/
-│   ├── app/
-│   │   ├── api/          # API routes
-│   │   ├── models/       # Database models
-│   │   ├── schemas/      # Pydantic schemas
-│   │   ├── services/     # Business logic
-│   │   └── utils/        # Utilities
-│   ├── tests/
-│   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── pages/        # Page components
-│   │   ├── lib/          # Utilities
-│   │   ├── stores/       # State management
-│   │   └── types/        # TypeScript types
-│   └── package.json
-└── README.md
+│   │   ├── pages/
+│   │   │   ├── ChallengeList.tsx   # Browse + filter challenges
+│   │   │   ├── ChallengeDetail.tsx # Problem statement + editor
+│   │   │   └── Results.tsx         # Submission feedback
+│   │   ├── components/
+│   │   │   ├── ChallengeCard.tsx
+│   │   │   ├── CodeEditor.tsx
+│   │   │   └── FilterBar.tsx
+│   │   └── router.tsx              # React Router config
+└── backend/
+    ├── main.py                     # FastAPI app + middleware
+    ├── routers/
+    │   ├── challenges.py           # Challenge CRUD
+    │   └── submissions.py          # Submission + evaluation
+    └── models/
+        ├── challenge.py
+        └── submission.py
 ```
 
-## Development Roadmap
+---
 
-### Phase 1: MVP (Weeks 1-4)
-- [x] Project setup
-- [ ] Authentication system
-- [ ] Challenge browsing
-- [ ] Basic submission system
-- [ ] Grading service
+## Author
 
-### Phase 2: Enhancement (Weeks 5-6)
-- [ ] Video recording
-- [ ] AI code review challenges
-- [ ] Achievement system
-- [ ] Leaderboard
-
-### Phase 3: Growth (Weeks 7-8)
-- [ ] Admin dashboard
-- [ ] User analytics
-- [ ] Social features
-- [ ] Challenge recommendations
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
-## License
-
-MIT License
+**Ishaan Parekh** — [LinkedIn](https://www.linkedin.com/in/ishaan-parekh-19i112002) · [Portfolio](https://ishaanparekh.vercel.app) · [GitHub](https://github.com/ishaan1911)
